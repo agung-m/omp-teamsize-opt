@@ -31,12 +31,41 @@ class NBodyRunner:
             fo.write(modified)
 
     def execute_nbody(self, params):
+        # Convert to python list to ensure compatibility
+        params = params.tolist()
+        print("- [NBodyRunner] team sizes: {}".format(params))
         self.modify_src(params)
         command = [self.run_script]
-        process = subprocess.run(command, check=True, stdout=subprocess.PIPE, universal_newlines=True)
+        #process = subprocess.run(command, check=True, stdout=subprocess.PIPE, universal_newlines=True)
+        # subprocess call for Python 2.7.x
+        process = subprocess.Popen(command, stdout=subprocess.PIPE)
         # Get results from stdout, application is asummed to return the execution time
-        exec_time = float(process.stdout)
-        return exec_time
+        #outs = process.communicate()[0]
+        exec_times = self.parse_output(process.stdout)
+        print("- [NBodyRunner] exec_times: {}".format(exec_times))
+        #exec_time = float(process.stdout)
+        return exec_times
+
+    def parse_output(self, stdout):
+        exec_times = [None] * 2
+        #out_str = stdout.decode("utf-8")
+        for line in stdout.readlines():
+            line = line.decode("utf-8").rstrip()
+            #print(line)
+            if line.startswith("Physical total"):
+                exec_times[0] = float(line.split(',')[1])
+            elif line.startswith("Parall(overall)"):
+                exec_times[1] = float(line.split(',')[1])
+            
+        #buf = io.StringIO(outs)
+        #print(buf.readlines())
+        #for line in buf.readlines():
+        #    if line.startswith("Physical total"):
+        #        exec_times[0] = line.split(',')[1]
+        #    elif line.startswith("Parall(overall)"):
+        #        exec_times[1] = line.split(',')[1]
+        return exec_times
+        
 
 # Main program
 if __name__ == "__main__":
@@ -44,10 +73,10 @@ if __name__ == "__main__":
     num_teams = 4
     src_filename = "src/parallel/main.c"
     temp_src_filename = 'src/parallel/main-4teams.c'
-    run_script = 'compile_run.sh'
+    run_script = 'run_dubinsky.sh'
 
     nbody_runner = NBodyRunner(workdir, num_teams, src_filename, temp_src_filename, run_script)
-    nbody_runner.execute_nbody([15, 15, 15, 15])
+    nbody_runner.execute_nbody([60, 60, 60, 60])
 
 #patts = [None] * 4
 #patts[0] = r'([\S\s]int THDS0=)\d{1,}(;)'

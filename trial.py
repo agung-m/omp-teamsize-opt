@@ -1,15 +1,28 @@
 import subprocess
 from deap import benchmarks
+from nbody_runner import NBodyRunner
 
 NTHREADS_MIN = 1
-NTHREADS_MAX = 240
-INVALID_NTHREADS_PENALTY = 1000.0
+NTHREADS_MAX = 60
 NUM_TEAMS = 4
+# GA typically assume unbounded individuals, so we need to overcome bound problems 
+# by using the feasibility function.
+# Set penalty higher than the estmated max execution time of trials, or as high as possible,
+# or we can get unbounded individuals.
+INVALID_NTHREADS_PENALTY = float('inf')
+#INVALID_NTHREADS_PENALTY = 1000000.0
+
+nbody_workdir = '.'  # current workdir, or set to path of nbody dir
+src_filename = "src/parallel/main.c"
+temp_src_filename = 'src/parallel/main-4teams.c'
+run_script = 'run_dubinsky.sh'
 
 def run(params):
-    return benchmarks.ackley(params)
+    #print("[Trial] {}".format(params))
+    #return benchmarks.ackley(params)
     #return exec_benchmark(params)
-
+    print("[Trial] {}".format(params))
+    return exec_nbody(params),
 
 def exec_benchmark(params):
     # command in form ['app', 'arg1', 'arg2',..]
@@ -19,6 +32,12 @@ def exec_benchmark(params):
     exec_time = float(process.stdout)
     return exec_time
 
+def exec_nbody(params):
+    nbody_runner = NBodyRunner(nbody_workdir, NUM_TEAMS, src_filename, temp_src_filename, run_script)
+    exec_times = nbody_runner.execute_nbody(params)
+    return exec_times[1]
+    #nbody_runner.execute_nbody([60, 60, 60, 60])
+    
 
 # Check if individual is not out-of-bond,
 # i.e., number of threads is invalid
