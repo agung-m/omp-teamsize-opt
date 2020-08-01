@@ -10,9 +10,9 @@ Generic implementations are planned as future work.
 ### Usage
 An example of tuning the NBody program using DE:
 
-1. Clone the teamsize-opt project from github, place the teamsize-opt directory to the parent directory of your program, e.g., one level above src/
+1. Clone omp-teamsize-opt project from github, place the omp-teamsize-opt directory to the parent directory of your program, e.g., one level above src/
 2. Create a script to change the parameters and run the program:
   - See trial.py, run_dubinsky.sh and Makefile-parallel for examples
 3. Run the optimizer from the parent directory:
 
-   <code>$ python teamsize-opt/teamsize_de_opt.py</code>
+   <code>$ python omp-teamsize-opt/teamsize_de_opt.py</code>
