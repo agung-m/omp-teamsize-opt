@@ -1,0 +1,29 @@
+SRCPAR=src/parallel
+SRCGEN=src/gen
+
+BIN=bin
+BUILD=build
+
+.PHONY: clean makedirs all $(SRCPAR)
+
+#all: clean makedirs ser par mic gen
+all: clean makedirs par gen
+	rm -rf $(BUILD)
+
+par:
+	$(MAKE) -C $(SRCPAR)
+
+#mic:
+#	$(MAKE) -C $(SRCMIC)
+
+#mic-gcc:
+#	$(MAKE) -C $(SRCMICGC)
+
+gen:
+	$(MAKE) -C $(SRCGEN)
+
+makedirs:
+	mkdir -p $(BIN) $(BUILD)
+
+clean:
+	rm -rf $(BIN) $(BUILD)/barneshut-p
