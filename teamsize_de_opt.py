@@ -40,12 +40,14 @@ def main():
     # Differential weight
     F = 1
     # The number of individuals to select for the next generation
-    MU = 300
+    #MU = 300
+    MU = 10
     # The number of generation
-    NGEN = 200
+    #NGEN = 200
+    NGEN = 2
 
     pop = toolbox.population(n=MU);
-    print(pop)
+    #print(pop)
     hof = tools.HallOfFame(1)
     stats = tools.Statistics(lambda ind: ind.fitness.values)
     stats.register("avg", numpy.mean)
