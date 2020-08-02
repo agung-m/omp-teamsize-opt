@@ -2,8 +2,9 @@ import subprocess
 from deap import benchmarks
 from nbody_runner import NBodyRunner
 
-NTHREADS_MIN = 1
-NTHREADS_MAX = 240
+NTHREADS_MIN = 30
+NTHREADS_MAX = 150
+NTHREADS_TOTAL = 240
 NUM_TEAMS = 4
 # GA typically assume unbounded individuals, so we need to overcome bound problems 
 # by using the feasibility function.
@@ -49,12 +50,12 @@ def feasible(params):
     # Check individual param first to avoid wrong sum
     for nthreads in params:
         #if nthreads < NTHREADS_MIN or nthreads > NTHREADS_MAX:
-        if nthreads < NTHREADS_MIN or nthreads > (NTHREADS_MAX - NUM_TEAMS + 1):
+        if nthreads < NTHREADS_MIN or nthreads > NTHREADS_MAX:
             valid = False
             break
     if valid:
         #total = int(sum(params))
         #print("SUM = {}".format(total))
-        valid = True if sum(params) <= NTHREADS_MAX else False
+        valid = True if sum(params) <= NTHREADS_TOTAL else False
     
     return valid
