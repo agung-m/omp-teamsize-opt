@@ -41,7 +41,7 @@ def main():
     F = 1
     # The number of individuals to select for the next generation
     #MU = 300
-    MU = 10
+    MU = 300
     # The number of generation
     #NGEN = 200
     NGEN = 2

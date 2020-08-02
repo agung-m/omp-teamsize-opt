@@ -3,14 +3,14 @@ from deap import benchmarks
 from nbody_runner import NBodyRunner
 
 NTHREADS_MIN = 1
-NTHREADS_MAX = 60
+NTHREADS_MAX = 240
 NUM_TEAMS = 4
 # GA typically assume unbounded individuals, so we need to overcome bound problems 
 # by using the feasibility function.
 # Set penalty higher than the estmated max execution time of trials, or as high as possible,
 # or we can get unbounded individuals.
-INVALID_NTHREADS_PENALTY = float('inf')
-#INVALID_NTHREADS_PENALTY = 1000000.0
+#INVALID_NTHREADS_PENALTY = float('inf')
+INVALID_NTHREADS_PENALTY = 1000000.0
 
 nbody_workdir = '.'  # current workdir, or set to path of nbody dir
 src_filename = "src/parallel/main.c"
@@ -44,10 +44,17 @@ def exec_nbody(params):
 def feasible(params):
     """Feasibility function for the individual. Returns True if feasible False
         otherwise."""
+    #print(sum(params))
     valid = True
+    # Check individual param first to avoid wrong sum
     for nthreads in params:
-        if nthreads < NTHREADS_MIN or nthreads > NTHREADS_MAX:
+        #if nthreads < NTHREADS_MIN or nthreads > NTHREADS_MAX:
+        if nthreads < NTHREADS_MIN or nthreads > (NTHREADS_MAX - NUM_TEAMS + 1):
             valid = False
             break
-
+    if valid:
+        #total = int(sum(params))
+        #print("SUM = {}".format(total))
+        valid = True if sum(params) <= NTHREADS_MAX else False
+    
     return valid
