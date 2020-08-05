@@ -44,7 +44,7 @@ def main():
     MU = 300
     # The number of generation
     #NGEN = 200
-    NGEN = 2
+    NGEN =100
 
     pop = toolbox.population(n=MU);
     #print(pop)
