@@ -2,8 +2,8 @@ import subprocess
 from deap import benchmarks
 from nbody_runner import NBodyRunner
 
-NTHREADS_MIN = 30
-NTHREADS_MAX = 150
+NTHREADS_MIN = 40
+NTHREADS_MAX = 120
 NTHREADS_TOTAL = 240
 NUM_TEAMS = 4
 # GA typically assume unbounded individuals, so we need to overcome bound problems 
