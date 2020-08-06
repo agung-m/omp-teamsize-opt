@@ -9,3 +9,6 @@ make -f Makefile-parallel
 
 # run
 bin/barneshut-p datasets/dubinski $TIME_LIMIT
+
+# delete output files after run
+rm -r out_dubinski_* gif_out_dubinski_*
