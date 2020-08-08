@@ -69,7 +69,7 @@ class NBodyRunner:
         #        exec_times[1] = line.split(',')[1]
         return exec_times
 
-    def execute_nbody_alt(self, params):
+    def execute_nbody_alt(self, params, timeout=None):
         exec_times = [None] * 2
         params = params.tolist()
         self.modify_src(params)
@@ -80,12 +80,22 @@ class NBodyRunner:
         process = subprocess.Popen(command, stdout=subprocess.PIPE, bufsize=1)
         with process.stdout:
             for line in iter(process.stdout.readline, b''):
+                line = line.decode("utf-8").rstrip()
+                #print(line)
                 if line.startswith("Physical total"):
                     exec_times[0] = float(line.split(',')[1])
                 elif line.startswith("Parall(overall)"):
                     exec_times[1] = float(line.split(',')[1])
         
-        ret = process.wait() 
+        # Finish sucessfully or failed after timeout (in seconds)
+        try:
+            ret = process.wait(timeout)
+        except subprocess.TimeoutExpired:
+            process.kill()
+            process.wait()
+            ret = -1;
+        
+        # Exec time can be None if ret_code != 0
         print("<< [NBodyRunner] ret_code: {}, exec_times: {}".format(ret, exec_times))
         #exec_time = float(process.stdout)
         return exec_times

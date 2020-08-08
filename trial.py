@@ -1,4 +1,5 @@
 import subprocess
+import time
 from deap import benchmarks
 from nbody_runner import NBodyRunner
 
@@ -17,8 +18,11 @@ nbody_workdir = '.'  # current workdir, or set to path of nbody dir
 src_filename = "src/parallel/main.c"
 temp_src_filename = 'src/parallel/main-4teams.c'
 run_script = 'run_dubinsky.sh'
+# Timeout in sec, set to None for unlimited
+run_timeout = 30 
 
 n_trial = 0
+retry = 3
 
 def run(params):
     #print("[Trial] {}".format(params))
@@ -27,7 +31,7 @@ def run(params):
     global n_trial
     n_trial += 1
     print("[Trial-{}] {}".format(n_trial, params))
-    return exec_nbody(params),
+    return exec_nbody_py3(params),
 
 def exec_benchmark(params):
     # command in form ['app', 'arg1', 'arg2',..]
@@ -39,12 +43,26 @@ def exec_benchmark(params):
 
 def exec_nbody(params):
     nbody_runner = NBodyRunner(nbody_workdir, NUM_TEAMS, src_filename, temp_src_filename, run_script)
-    #exec_times = nbody_runner.execute_nbody(params)
-    exec_times = nbody_runner.execute_nbody_alt(params)
+    exec_times = nbody_runner.execute_nbody(params)
     return exec_times[1]
     #nbody_runner.execute_nbody([60, 60, 60, 60])
-    
 
+def exec_nbody_py3(params):
+    nbody_runner = NBodyRunner(nbody_workdir, NUM_TEAMS, src_filename, temp_src_filename, run_script)
+    exec_times = nbody_runner.execute_nbody_alt(params, run_timeout)
+    result = exec_times[1]
+    
+    # Retry mechanism if there is something fishy with the execution
+    n = 0
+    while result == None and n < retry:
+        print("** Retrying ({})..".format(n))
+        time.sleep(2)
+        exec_times = nbody_runner.execute_nbody_alt(params, run_timeout)
+        result = exec_times[1]
+        n += 1
+
+    return result
+    
 # Check if individual is not out-of-bond,
 # i.e., number of threads is invalid
 def feasible(params):
