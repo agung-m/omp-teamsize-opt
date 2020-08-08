@@ -68,7 +68,28 @@ class NBodyRunner:
         #    elif line.startswith("Parall(overall)"):
         #        exec_times[1] = line.split(',')[1]
         return exec_times
+
+    def execute_nbody_alt(self, params):
+        exec_times = [None] * 2
+        params = params.tolist()
+        self.modify_src(params)
+        command = [self.run_script]
+        print(">> [NBodyRunner] team sizes: {}".format(params))
+        #process = subprocess.run(command, check=True, stdout=subprocess.PIPE, universal_newlines=True)
+        # subprocess call for Python 2.7.x
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, bufsize=1)
+        with process.stdout:
+            for line in iter(process.stdout.readline, b''):
+                if line.startswith("Physical total"):
+                    exec_times[0] = float(line.split(',')[1])
+                elif line.startswith("Parall(overall)"):
+                    exec_times[1] = float(line.split(',')[1])
         
+        ret = process.wait() 
+        print("<< [NBodyRunner] ret_code: {}, exec_times: {}".format(ret, exec_times))
+        #exec_time = float(process.stdout)
+        return exec_times
+
 
 # Main program
 if __name__ == "__main__":

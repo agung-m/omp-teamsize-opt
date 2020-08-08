@@ -39,7 +39,8 @@ def exec_benchmark(params):
 
 def exec_nbody(params):
     nbody_runner = NBodyRunner(nbody_workdir, NUM_TEAMS, src_filename, temp_src_filename, run_script)
-    exec_times = nbody_runner.execute_nbody(params)
+    #exec_times = nbody_runner.execute_nbody(params)
+    exec_times = nbody_runner.execute_nbody_alt(params)
     return exec_times[1]
     #nbody_runner.execute_nbody([60, 60, 60, 60])
     
