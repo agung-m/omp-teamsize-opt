@@ -38,19 +38,22 @@ class NBodyRunner:
         command = [self.run_script]
         #process = subprocess.run(command, check=True, stdout=subprocess.PIPE, universal_newlines=True)
         # subprocess call for Python 2.7.x
-        process = subprocess.Popen(command, stdout=subprocess.PIPE)
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, bufsize=4096)
         # Get results from stdout, application is asummed to return the execution time
-        #outs = process.communicate()[0]
-        exec_times = self.parse_output(process.stdout)
+        out, err = process.communicate()
+        exec_times = self.parse_output(out)
         print("- [NBodyRunner] exec_times: {}".format(exec_times))
         #exec_time = float(process.stdout)
         return exec_times
 
-    def parse_output(self, stdout):
+    def parse_output(self, out):
         exec_times = [None] * 2
         #out_str = stdout.decode("utf-8")
-        for line in stdout.readlines():
-            line = line.decode("utf-8").rstrip()
+        #lines = stdout.decode("utf-8").splitlines()
+        lines = str(out).splitlines()
+        #print(lines)
+        for line in lines:
+            #line = line.decode("utf-8").rstrip()
             #print(line)
             if line.startswith("Physical total"):
                 exec_times[0] = float(line.split(',')[1])

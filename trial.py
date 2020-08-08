@@ -18,11 +18,15 @@ src_filename = "src/parallel/main.c"
 temp_src_filename = 'src/parallel/main-4teams.c'
 run_script = 'run_dubinsky.sh'
 
+n_trial = 0
+
 def run(params):
     #print("[Trial] {}".format(params))
     #return benchmarks.ackley(params)
     #return exec_benchmark(params)
-    print("[Trial] {}".format(params))
+    global n_trial
+    n_trial += 1
+    print("[Trial-{}] {}".format(n_trial, params))
     return exec_nbody(params),
 
 def exec_benchmark(params):
