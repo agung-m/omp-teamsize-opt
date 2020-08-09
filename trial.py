@@ -19,7 +19,7 @@ src_filename = "src/parallel/main.c"
 temp_src_filename = 'src/parallel/main-4teams.c'
 run_script = 'run_dubinsky.sh'
 # Timeout in sec, set to None for unlimited
-run_timeout = 30 
+run_timeout = 180 
 
 n_trial = 0
 retry = 3
