@@ -1,12 +1,26 @@
 import subprocess
 import re
+from threading import Thread
+from subprocess_timeout_task import SubprocessTimeoutTask
+
 
 class NBodyRunner:
-    def __init__(self, workdir, num_teams, src_filename, temp_src_filename, run_script):
+    def __init__(self, workdir, num_teams, src_filename, temp_src_filename, \
+                    run_script, build_script, cleanup_script, \
+                    exe="bin/barneshut-p", dataset="datasets/dubinski", \
+                    timestep=0.00001):
         self.workdir = workdir
         self.num_teams = num_teams
         self.main_src = self.workdir + '/' + src_filename
         self.run_script = self.workdir + '/' + run_script
+        self.build_script = self.workdir + '/' + build_script
+        self.cleanup_script = self.workdir + '/' + cleanup_script
+        
+        self.dataset = dataset
+        self.timestep = timestep
+        self.exe = exe
+        self.run_cmd = [self.exe, self.dataset, str(self.timestep)]
+        #print(" [NBodyRunner] cmd = {}".format(self.run_cmd))
 
         # Regex patterns
         self.patts = [None] * self.num_teams
@@ -30,6 +44,12 @@ class NBodyRunner:
         with open(self.main_src, 'w') as fo:
             fo.write(modified)
 
+    def build_nbody(self):
+        return subprocess.call([self.build_script])
+
+    def clean_outputs(self):
+        return subprocess.call([self.cleanup_script])
+        
     def execute_nbody(self, params):
         # Convert to python list to ensure compatibility
         params = params.tolist()
@@ -100,6 +120,124 @@ class NBodyRunner:
         #exec_time = float(process.stdout)
         return exec_times
 
+    def execute_nbody_check(self, params, timeout=None):
+        exec_times = [None] * 2
+        self.modify_src(params)
+        command = [self.run_script]
+        print(">> [NBodyRunner] team sizes: {}".format(params))
+        p = None
+        try:
+            p = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, bufsize=1)
+            #out, err = p.communicate(timeout=timeout)
+            with p.stdout:
+                for line in iter(p.stdout.readline, b''):
+                    line = line.decode("utf-8").rstrip()
+                    #print(line)
+                    if line.startswith("Physical total"):
+                        exec_times[0] = float(line.split(',')[1])
+                    elif line.startswith("Parall(overall)"):
+                        exec_times[1] = float(line.split(',')[1])
+    
+            ret = p.wait(timeout)
+            print("<< [NBodyRunner] ret_code: {}, exec_times: {}".format(ret, exec_times))
+        except subprocess.TimeoutExpired:
+            print("(-) Timeout error!")
+            if p:
+                p.kill()
+                p.communicate()
+        except subprocess.SubprocessError as se:
+            print("(-) Subprocess error: {}".format(se))
+            if p:
+                p.kill()
+                p.communicate()
+        except OSError as e:
+            print("(-) Failed to run shell: {}".format(e))
+            
+        return exec_times 
+    
+    def execute_nbody_check_output(self, params, timeout=None):
+        exec_times = [None] * 2
+        self.modify_src(params)
+        command = [self.run_script]
+        print(">> [NBodyRunner] team sizes: {}".format(params))
+        try:
+            out = subprocess.check_output(command, universal_newlines=True, timeout=timeout)
+            #out, err = p.communicate(timeout=timeout)
+            #lines = str(out).splitlines()
+            for line in out.splitlines():
+                #line = line.decode("utf-8").rstrip()
+                #print(line)
+                if line.startswith("Physical total"):
+                    exec_times[0] = float(line.split(',')[1])
+                elif line.startswith("Parall(overall)"):
+                    exec_times[1] = float(line.split(',')[1])
+    
+            print("<< [NBodyRunner] exec_times: {}".format(exec_times))
+        except subprocess.TimeoutExpired:
+            print("(-) Timeout error!")
+            #if p:
+            #    p.kill()
+            #    p.communicate()
+        except subprocess.SubprocessError as se:
+            print("(-) Subprocess error: {}".format(se))
+            #if p:
+            #    p.kill()
+            #    p.communicate()
+        #except OSError as e:
+        #    print("(-) Failed to run shell: {}".format(e))
+            
+        return exec_times 
+    
+    def execute_nbody_monitor(self, params, timeout=None):
+        exec_times = [None] * 2
+        self.modify_src(params)
+        # Call build script
+        ret = self.build_nbody()
+        if ret != 0:
+            print("[-] Build fails!")
+            return exec_times
+        
+        #command = [self.run_script]
+        #command = [self.exe, self.dataset, str(self.timestep)]
+        print(">> [NBodyRunner] team sizes: {}".format(params))
+        
+        # Timeout monitor
+        mon = SubprocessTimeoutTask(timeout)
+        #t = Thread(target = mon.run, args=(p,))
+        t = Thread(target = mon.run)
+        t.start()
+        try:
+            #p = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1)
+            p = subprocess.Popen(self.run_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1)
+            
+            mon.setSubprocess(p)
+            #out, err = p.communicate(timeout=timeout)
+            with p.stdout:
+                for line in iter(p.stdout.readline, b''):
+                    #line = line.decode("utf-8").rstrip()
+                    #print(line)
+                    if line.startswith(b'Physical total'):
+                        s = line.decode('utf-8').rstrip()
+                        exec_times[0] = float(s.split(',')[1])
+                    elif line.startswith(b'Parall(overall)'):
+                        s = line.decode('utf-8').rstrip()
+                        exec_times[1] = float(s.split(',')[1])
+    
+            ret = p.wait()
+            print("<< [NBodyRunner] ret_code: {}, exec_times: {}".format(ret, exec_times))
+            mon.stop()
+            # Call cleanup script
+            self.clean_outputs()
+
+        except subprocess.SubprocessError as se:
+            print("(-) Subprocess error: {}".format(se))
+            if p:
+                p.kill()
+                p.wait()
+            
+        t.join()
+        return exec_times 
+
 
 # Main program
 if __name__ == "__main__":
@@ -108,8 +246,9 @@ if __name__ == "__main__":
     src_filename = "src/parallel/main.c"
     temp_src_filename = 'src/parallel/main-4teams.c'
     run_script = 'run_dubinsky.sh'
+    build_script = 'build_dubinsky.sh'
 
-    nbody_runner = NBodyRunner(workdir, num_teams, src_filename, temp_src_filename, run_script)
+    nbody_runner = NBodyRunner(workdir, num_teams, src_filename, temp_src_filename, run_script, build_script)
     nbody_runner.execute_nbody([60, 60, 60, 60])
 
 #patts = [None] * 4

@@ -17,9 +17,13 @@ INVALID_NTHREADS_PENALTY = 1000000.0
 nbody_workdir = '.'  # current workdir, or set to path of nbody dir
 src_filename = "src/parallel/main.c"
 temp_src_filename = 'src/parallel/main-4teams.c'
-run_script = 'run_dubinsky.sh'
+run_script = 'run_dubinsky.sh' # Obsolete, see the init method of nbody runner
+build_script = 'build_dubinsky.sh'
+cleanup_script = 'cleanup_dubinsky.sh'
+# Timestep parameter of the nbody program
+nbody_timestep = 0.00001
 # Timeout in sec, set to None for unlimited
-run_timeout = 180 
+run_timeout = 60
 
 n_trial = 0
 retry = 3
@@ -30,6 +34,9 @@ def run(params):
     #return exec_benchmark(params)
     global n_trial
     n_trial += 1
+    if (n_trial % 100) == 0:
+        time.sleep(3)
+
     print("[Trial-{}] {}".format(n_trial, params))
     return exec_nbody_py3(params),
 
@@ -48,18 +55,28 @@ def exec_nbody(params):
     #nbody_runner.execute_nbody([60, 60, 60, 60])
 
 def exec_nbody_py3(params):
-    nbody_runner = NBodyRunner(nbody_workdir, NUM_TEAMS, src_filename, temp_src_filename, run_script)
-    exec_times = nbody_runner.execute_nbody_alt(params, run_timeout)
+    nbody_runner = NBodyRunner(nbody_workdir, NUM_TEAMS, src_filename, temp_src_filename,\
+                               run_script, build_script, cleanup_script, timestep=nbody_timestep)
+    #exec_times = nbody_runner.execute_nbody_alt(params, run_timeout)
+    #exec_times = nbody_runner.execute_nbody_check(params, run_timeout)
+    #exec_times = nbody_runner.execute_nbody_check_output(params, run_timeout)
+    exec_times = nbody_runner.execute_nbody_monitor(params, run_timeout)
     result = exec_times[1]
     
     # Retry mechanism if there is something fishy with the execution
     n = 0
     while result == None and n < retry:
-        print("** Retrying ({})..".format(n))
+        print("** Restarting ({})..".format(n+1))
         time.sleep(2)
-        exec_times = nbody_runner.execute_nbody_alt(params, run_timeout)
+        #exec_times = nbody_runner.execute_nbody_alt(params, run_timeout)
+        exec_times = nbody_runner.execute_nbody_monitor(params, run_timeout)
         result = exec_times[1]
         n += 1
+
+    # If it still fails, set the weights to the penalty value, s.t. the optimizer can continue
+    if result == None:
+        result = INVALID_NTHREADS_PENALTY
+        print("[WARN] The execution has failed, this candidate will be considered unfeasible.")
 
     return result
     
