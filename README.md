@@ -12,7 +12,7 @@ With minimal modifications, the optimizer can also be used to tune applications 
 A generic implementation is planned as future work. Everyone is welcome to contribute.
 
 ## Cite this work
-Please see the following papers for details and to cite this work:
+Please see the following publication for details and to cite this work.
 
 Xiao, X., Agung, M., Amrizal, M.A., Egawa, R. and Takizawa, H., 2018, November. Investigating the Effects of Dynamic Thread Team Size Adjustment for Irregular Applications. In 2018 Sixth International Symposium on Computing and Networking (CANDAR) (pp. 76-84). IEEE. https://doi.org/10.1109/CANDAR.2018.00017
 
