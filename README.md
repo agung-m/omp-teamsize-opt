@@ -18,6 +18,8 @@ Xiao, X., Agung, M., Amrizal, M.A., Egawa, R. and Takizawa, H., 2018, November. 
 
 
 ## Usage
+opt-teamsize-opt needs Python and the [DEAP package](https://deap.readthedocs.io/en/master/installation.html) installed. See [Conda](https://docs.conda.io/projects/conda/en/latest/user-guide/getting-started.html) to quickly install Python and packages.
+
 An example of tuning the NBody program:
 
 1. Clone omp-teamsize-opt, place the omp-teamsize-opt directory to the parent directory of the target program, e.g., one level above src/
