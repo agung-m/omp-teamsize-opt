@@ -1,13 +1,13 @@
 # OpenMP Thread Team Size Optimizer
-*omp-teamsize-opt* is a package for automatically tuning OpenMP (OMP) thread team size.
+*omp-teamsize-opt* is a tool for automatically tuning OpenMP (OMP) thread team size.
 
 ## Features
 - AI-based optimization, currently using [Differential Evolution (DE)](https://en.wikipedia.org/wiki/Differential_evolution)
-- Faster than grid-search, better than random-search 
+- Faster than grid-search due to fewer tests 
 - Extensible; optimizer is decoupled from the target application
 
 ## Extensibility
-With minimal modifications, the optimizer can also be used to tune applications with [hyperparameters](https://en.wikipedia.org/wiki/Hyperparameter_optimization).
+With some modifications, the optimizer can also be used for tuning other runtime parameters and [hyperparameters](https://en.wikipedia.org/wiki/Hyperparameter_optimization).
 
 A generic implementation is planned as future work. Everyone is welcome to contribute.
 
@@ -22,10 +22,10 @@ opt-teamsize-opt needs Python and the [DEAP package](https://deap.readthedocs.io
 
 An example of tuning the NBody program:
 
-1. Clone omp-teamsize-opt, place the omp-teamsize-opt directory to the parent directory of the target program, e.g., one level above src/
-2. Create script(s) to change the parameters and run the program. See [trial.py](/trial.py) and [run_dubinsky.sh](/run_dubinsky.sh) for examples
-4. Run the optimizer from the parent directory:
-   
+1. Download the project code:  
+   `git clone https://github.com/agung-m/omp-teamsize-opt.git`
+2. Create a script to run the program with different parameters. See [nbody_runner.py](/nbody_runner.py) and [trial.py](/trial.py).
+3. Run the optimizer:  
    `python teamsize_de_opt.py`
 
 ## License
